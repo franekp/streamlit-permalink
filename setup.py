@@ -11,6 +11,7 @@ setup(
     version='0.1.0',
     description='Effortless permalinks in Streamlit apps.',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Franciszek Piszcz',
     author_email='franciszek.piszcz@rtbhouse.com',
     url='https://github.com/franekp/streamlit-permalink',
