@@ -1,5 +1,11 @@
 # Effortless permalinks in Streamlit apps
 
+### Installation
+
+```bash
+pip install streamlit-permalink
+```
+
 ### Basic usage
 
 The `streamlit_permalink` (shorthand: `stp`) namespace contains url-aware versions of almost all input widgets from Streamlit:
@@ -9,7 +15,7 @@ stp.checkbox, stp.radio, stp.selectbox, stp.multiselect, stp.slider, stp.select_
 stp.number_input, stp.text_area, stp.date_input, stp.time_input, stp.color_picker, stp.form_submit_button
 ```
 
-[Streamlit docs](https://docs.streamlit.io/library/api-reference/widgets) contain basic information about input widgets. Url-aware widgets additionally take one more keyword argument: `url_key`. It is the name of the query parameter in the URL under which the widget’s state will be persisted:
+General usage of input widgets is described in [Streamlit docs](https://docs.streamlit.io/library/api-reference/widgets). Url-aware widgets additionally take one more keyword argument: `url_key`. It is the name of the query parameter in the URL under which the widget’s state will be persisted:
 
 ```python
 import streamlit_permalink as stp
@@ -32,7 +38,7 @@ text = stp.text_input('Type some text')
 # no matter whether the above text field is empty or not
 ```
 
-By default, the value of `url_key` is also passed as the `key` argument to the original widget in the `st` namespace.
+By default, the value of `url_key` is also used as the `key` parameter of the Streamlit widget: 
 
 ```python
 import streamlit as st
@@ -73,7 +79,7 @@ Or with alternative syntax:
 ```python
 import streamlit_permalink as stp
 
-form = stp.form('some-form'):
+form = stp.form('some-form')
 form.text_input('Text field inside form', url_key='secret')
 # At this point the URL query string is empty / unchanged, even
 # if the user has edited the text field.
