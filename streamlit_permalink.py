@@ -64,10 +64,7 @@ class UrlAwareWidget:
         kwargs['on_change'] = on_change
         url_value = url.get(url_key, None)
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
-        # TODO: remove the first return value from the handle_{widget-name}() methods
-        # NOTE: do this when we gain confidence that the on_change callbacks are a
-        # reliable replacement for the SessionState-based hacky solution for permalinks
-        _, result = handler(url_value, *args, **kwargs)
+        result = handler(value, *args, **kwargs)
         return result
 
     def call_inside_form(self, form, *args, **kwargs):
@@ -88,7 +85,7 @@ class UrlAwareWidget:
         if url_value is not None:
             value = url_value
         result = self.base_widget(label, value, *args, **kwargs)
-        return str(result), result
+        return result
 
     def handle_radio(self, url_value, *args, **kwargs):
         return self.handle_selectbox(url_value, *args, **kwargs)
@@ -102,14 +99,14 @@ class UrlAwareWidget:
             except ValueError:
                 pass
         result = self.base_widget(label, options, index, *args, **kwargs)
-        return result, result
+        return result
 
     def handle_multiselect(self, url_value, label, options, default=None, *args, **kwargs):
         options = list(map(str, options))
         if url_value is not None:
             default = url_value
         result = self.base_widget(label, options, default, *args, **kwargs)
-        return result, result
+        return result
 
     def handle_slider(self, url_value, label, min_value=None, max_value=None, value=None, *args, **kwargs):
         if value is not None and not isinstance(value, list):
@@ -127,11 +124,7 @@ class UrlAwareWidget:
             else:
                 value = [slider_type(float(i)) for i in url_value]
         result = self.base_widget(label, min_value, max_value, value, *args, **kwargs)
-        if isinstance(result, tuple):
-            new_url_value = list(map(str, result))
-        else:
-            new_url_value = str(result)
-        return new_url_value, result
+        return result
 
     def handle_select_slider(self, url_value, label, options, value=None, *args, **kwargs):
         options = list(map(str, options))
@@ -141,13 +134,13 @@ class UrlAwareWidget:
             else:
                 value = url_value
         result = self.base_widget(label, options, value, *args, **kwargs)
-        return result, result
+        return result
 
     def handle_text_input(self, url_value, label, value="", *args, **kwargs):
         if url_value is not None:
             value = url_value[0]
         result = self.base_widget(label, value, *args, **kwargs)
-        return result, result
+        return result
 
     def handle_number_input(self, url_value, label, min_value=None, max_value=None, value=None, *args, **kwargs):
         input_type = float
@@ -164,37 +157,33 @@ class UrlAwareWidget:
             result = self.base_widget(label, min_value, max_value, *args, **kwargs)
         else:
             result = self.base_widget(label, min_value, max_value, value, *args, **kwargs)
-        return str(result), result
+        return result
 
     def handle_text_area(self, url_value, *args, **kwargs):
         return self.handle_text_input(url_value, *args, **kwargs)
 
     def handle_date_input(self, url_value, label, value=None, *args, **kwargs):
-        parse_date = lambda s: datetime.strptime(s,'%Y-%m-%d').date()
+        parse_date = lambda s: datetime.strptime(s, '%Y-%m-%d').date()
         if url_value is not None:
             if len(url_value) == 1:
                 value = parse_date(url_value[0])
             else:
                 value = list(map(parse_date, url_value))
         result = self.base_widget(label, value, *args, **kwargs)
-        if isinstance(result, tuple):
-            new_url_value = [d.isoformat() for d in result]
-        else:
-            new_url_value = result.isoformat()
-        return new_url_value, result
+        return result
 
     def handle_time_input(self, url_value, label, value=None, *args, **kwargs):
         parse_time = lambda s: datetime.strptime(s, '%H:%M').time()
         if url_value is not None:
             value = parse_time(url_value[0])
         result = self.base_widget(label, value, *args, **kwargs)
-        return result.strftime('%H:%M'), result
+        return result
 
     def handle_color_picker(self, url_value, label, value=None, *args, **kwargs):
         if url_value is not None:
             value = url_value[0]
         result = self.base_widget(label, value, *args, **kwargs)
-        return result, result
+        return result
 
 
 class UrlAwareFormSubmitButton:
