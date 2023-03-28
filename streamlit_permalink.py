@@ -1,7 +1,6 @@
 from datetime import datetime, date, time
 import streamlit as st
 
-
 # Instance of UrlAwareForm or None
 # used for widgets to know whether they
 # are inside a form or not
@@ -47,22 +46,34 @@ class UrlAwareWidget:
     def __call__(self, *args, **kwargs):
         if 'url_key' not in kwargs:
             return self.base_widget(*args, **kwargs)
+
         if _active_form is not None or self.form is not None:
             return self.call_inside_form(self.form or _active_form, *args, **kwargs)
+
         url_key = kwargs.pop('url_key')
         if 'key' not in kwargs:
             kwargs['key'] = url_key
         key = kwargs['key']
-        url = st.experimental_get_query_params()
+
         user_supplied_change_handler = kwargs.get('on_change', lambda *args, **kwargs: None)
 
         def on_change(*args, **kwargs):
-            url[url_key] = to_url_value(getattr(st.session_state, key))
-            st.experimental_set_query_params(**url)
+            qp = st.experimental_get_query_params()
+            qp[url_key] = to_url_value(getattr(st.session_state, key))
+            st.experimental_set_query_params(**qp)
             user_supplied_change_handler(*args, **kwargs)
 
         kwargs['on_change'] = on_change
-        url_value = url.get(url_key, None)
+
+        qp = st.experimental_get_query_params()
+        url_value = qp.get(key, None)
+        if key in st.session_state:
+            value = [st.session_state[key]]
+        elif url_value:
+            value = url_value
+        else:
+            value = None
+
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         result = handler(value, *args, **kwargs)
         return result
