@@ -53,16 +53,14 @@ class UrlAwareWidget:
         if 'key' not in kwargs:
             kwargs['key'] = url_key
         key = kwargs['key']
-        url = st.experimental_get_query_params()
         user_supplied_change_handler = kwargs.get('on_change', lambda *args, **kwargs: None)
 
         def on_change(*args, **kwargs):
-            url[url_key] = to_url_value(getattr(st.session_state, key))
-            st.experimental_set_query_params(**url)
+            st.query_params[url_key] = to_url_value(getattr(st.session_state, key))
             user_supplied_change_handler(*args, **kwargs)
 
         kwargs['on_change'] = on_change
-        url_value = url.get(url_key, None)
+        url_value = st.query_params[url_key]
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         # TODO: remove the first return value from the handle_{widget-name}() methods
         # NOTE: do this when we gain confidence that the on_change callbacks are a
@@ -76,8 +74,7 @@ class UrlAwareWidget:
             kwargs['key'] = url_key
         key = kwargs['key']
         form.field_mapping[url_key] = key
-        url = st.experimental_get_query_params()
-        url_value = url.get(url_key, None)
+        url_value = url.query_params[url_key]
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         _, result = handler(url_value, *args, **kwargs)
         return result
@@ -220,13 +217,11 @@ class UrlAwareFormSubmitButton:
         return self.base_widget(*args, **kwargs)
 
     def call_inside_form(self, form, *args, **kwargs):
-        url = st.experimental_get_query_params()
         user_supplied_click_handler = kwargs.get('on_click', lambda: None)
 
         def on_click(*args, **kwargs):
             for url_key, key in form.field_mapping.items():
-                url[url_key] = to_url_value(getattr(st.session_state, key))
-            st.experimental_set_query_params(**url)
+                st.query_params[url_key] = to_url_value(getattr(st.session_state, key))
             user_supplied_click_handler(*args, **kwargs)
 
         kwargs['on_click'] = on_click
