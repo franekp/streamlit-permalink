@@ -59,8 +59,9 @@ class UrlAwareWidget:
             st.query_params[url_key] = to_url_value(getattr(st.session_state, key))
             user_supplied_change_handler(*args, **kwargs)
 
+
         kwargs['on_change'] = on_change
-        url_value = st.query_params[url_key]
+        url_value = st.query_params.get(url_key, None)
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         # TODO: remove the first return value from the handle_{widget-name}() methods
         # NOTE: do this when we gain confidence that the on_change callbacks are a
@@ -74,7 +75,7 @@ class UrlAwareWidget:
             kwargs['key'] = url_key
         key = kwargs['key']
         form.field_mapping[url_key] = key
-        url_value = url.query_params[url_key]
+        url_value = st.query_params.get(url_key, None)
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         _, result = handler(url_value, *args, **kwargs)
         return result
@@ -183,9 +184,12 @@ class UrlAwareWidget:
     def handle_time_input(self, url_value, label, value=None, *args, **kwargs):
         parse_time = lambda s: datetime.strptime(s, '%H:%M').time()
         if url_value is not None:
-            value = parse_time(url_value[0])
+            value = parse_time(url_value)
         result = self.base_widget(label, value, *args, **kwargs)
-        return result.strftime('%H:%M'), result
+        if result is not None:
+            return result.strftime('%H:%M'), result
+        else:
+            return result, result
 
     def handle_color_picker(self, url_value, label, value=None, *args, **kwargs):
         if url_value is not None:
@@ -221,7 +225,9 @@ class UrlAwareFormSubmitButton:
 
         def on_click(*args, **kwargs):
             for url_key, key in form.field_mapping.items():
-                st.query_params[url_key] = to_url_value(getattr(st.session_state, key))
+                raw_value = getattr(st.session_state, key)
+                if raw_value is not None:
+                    st.query_params[url_key] = to_url_value(raw_value)
             user_supplied_click_handler(*args, **kwargs)
 
         kwargs['on_click'] = on_click

@@ -33,12 +33,13 @@ irrelevant = [
     "__file__",
     "__builtins__",
     "st",
-    "__streamlit__",
+    "__streamlitmagic__",
     "stp",
     "datetime",
     "date",
     "time",
 ]
 for i in irrelevant:
-    del loc[i]
+    if i in loc:
+        del loc[i]
 st.write(loc)
