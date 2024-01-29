@@ -1,4 +1,5 @@
 from datetime import datetime, date, time
+from packaging.version import parse as V
 import streamlit as st
 
 
@@ -53,16 +54,24 @@ class UrlAwareWidget:
         if 'key' not in kwargs:
             kwargs['key'] = url_key
         key = kwargs['key']
-        url = st.experimental_get_query_params()
+        if V(st.__version__) < V('1.30'):
+            url = st.experimental_get_query_params()
         user_supplied_change_handler = kwargs.get('on_change', lambda *args, **kwargs: None)
 
         def on_change(*args, **kwargs):
-            url[url_key] = to_url_value(getattr(st.session_state, key))
-            st.experimental_set_query_params(**url)
+            if V(st.__version__) < V('1.30'):
+                url[url_key] = to_url_value(getattr(st.session_state, key))
+                st.experimental_set_query_params(**url)
+            else:
+                st.query_params[url_key] = to_url_value(getattr(st.session_state, key))
             user_supplied_change_handler(*args, **kwargs)
 
+
         kwargs['on_change'] = on_change
-        url_value = url.get(url_key, None)
+        if V(st.__version__) < V('1.30'):
+            url_value = url.get(url_key, None)
+        else:
+            url_value = st.query_params.get_all(url_key) or None
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         # TODO: remove the first return value from the handle_{widget-name}() methods
         # NOTE: do this when we gain confidence that the on_change callbacks are a
@@ -76,8 +85,11 @@ class UrlAwareWidget:
             kwargs['key'] = url_key
         key = kwargs['key']
         form.field_mapping[url_key] = key
-        url = st.experimental_get_query_params()
-        url_value = url.get(url_key, None)
+        if V(st.__version__) < V('1.30'):
+            url = st.experimental_get_query_params()
+            url_value = url.get(url_key, None)
+        else:
+            url_value = st.query_params.get_all(url_key) or None
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         _, result = handler(url_value, *args, **kwargs)
         return result
@@ -179,8 +191,10 @@ class UrlAwareWidget:
         result = self.base_widget(label, value, *args, **kwargs)
         if isinstance(result, tuple):
             new_url_value = [d.isoformat() for d in result]
-        else:
+        elif result is not None:
             new_url_value = result.isoformat()
+        else:
+            new_url_value = result
         return new_url_value, result
 
     def handle_time_input(self, url_value, label, value=None, *args, **kwargs):
@@ -188,7 +202,10 @@ class UrlAwareWidget:
         if url_value is not None:
             value = parse_time(url_value[0])
         result = self.base_widget(label, value, *args, **kwargs)
-        return result.strftime('%H:%M'), result
+        if result is not None:
+            return result.strftime('%H:%M'), result
+        else:
+            return result, result
 
     def handle_color_picker(self, url_value, label, value=None, *args, **kwargs):
         if url_value is not None:
@@ -220,13 +237,20 @@ class UrlAwareFormSubmitButton:
         return self.base_widget(*args, **kwargs)
 
     def call_inside_form(self, form, *args, **kwargs):
-        url = st.experimental_get_query_params()
+        if V(st.__version__) < V('1.30'):
+            url = st.experimental_get_query_params()
         user_supplied_click_handler = kwargs.get('on_click', lambda: None)
 
         def on_click(*args, **kwargs):
             for url_key, key in form.field_mapping.items():
-                url[url_key] = to_url_value(getattr(st.session_state, key))
-            st.experimental_set_query_params(**url)
+                raw_value = getattr(st.session_state, key)
+                if raw_value is not None:
+                    if V(st.__version__) < V('1.30'):
+                        url[url_key] = to_url_value(raw_value)
+                    else:
+                        st.query_params[url_key] = to_url_value(raw_value)
+            if V(st.__version__) < V('1.30'):
+                st.experimental_set_query_params(**url)
             user_supplied_click_handler(*args, **kwargs)
 
         kwargs['on_click'] = on_click
