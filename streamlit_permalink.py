@@ -307,3 +307,7 @@ class UrlAwareForm:
 
 
 form = UrlAwareForm
+
+
+def __getattr__(name):
+    return getattr(st, name)
