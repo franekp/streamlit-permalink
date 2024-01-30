@@ -61,7 +61,7 @@ class UrlAwareWidget:
 
 
         kwargs['on_change'] = on_change
-        url_value = st.query_params.get(url_key, None)
+        url_value = st.query_params.get_all(url_key)
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         # TODO: remove the first return value from the handle_{widget-name}() methods
         # NOTE: do this when we gain confidence that the on_change callbacks are a
@@ -75,16 +75,16 @@ class UrlAwareWidget:
             kwargs['key'] = url_key
         key = kwargs['key']
         form.field_mapping[url_key] = key
-        url_value = st.query_params.get(url_key, None)
+        url_value = st.query_params.get_all(url_key)
         handler = getattr(self, f'handle_{self.base_widget.__name__}')
         _, result = handler(url_value, *args, **kwargs)
         return result
 
     def handle_checkbox(self, url_value, label, value=False, *args, **kwargs):
-        url_value = url_value and url_value[0]
-        url_value = {'True': True, 'False': False}.get(url_value, url_value)
-        if url_value is not None:
-            value = url_value
+        if len(url_value) > 0:
+            value = {'True': True, 'False': False}.get(url_value[0], url_value[0])
+        else:
+            value = None 
         result = self.base_widget(label, value, *args, **kwargs)
         return str(result), result
 
@@ -94,7 +94,7 @@ class UrlAwareWidget:
     def handle_selectbox(self, url_value, label, options, index=0, *args, **kwargs):
         url_value = url_value and url_value[0]
         options = list(map(str, options))
-        if url_value is not None:
+        if len(url_value) > 0:
             try:
                 index = options.index(url_value)
             except ValueError:
@@ -104,7 +104,7 @@ class UrlAwareWidget:
 
     def handle_multiselect(self, url_value, label, options, default=None, *args, **kwargs):
         options = list(map(str, options))
-        if url_value is not None:
+        if len(url_value) > 0:
             default = url_value
         result = self.base_widget(label, options, default, *args, **kwargs)
         return result, result
@@ -119,7 +119,7 @@ class UrlAwareWidget:
         elif max_value is not None:
             slider_type = type(max_value)
         assert slider_type in (int, float), "unsupported slider type"
-        if url_value is not None:
+        if len(url_value) > 0:
             if len(url_value) == 1:
                 value = slider_type(float(url_value[0]))
             else:
@@ -133,7 +133,7 @@ class UrlAwareWidget:
 
     def handle_select_slider(self, url_value, label, options, value=None, *args, **kwargs):
         options = list(map(str, options))
-        if url_value is not None:
+        if len(url_value) > 0:
             if len(url_value) == 1:
                 value = url_value[0]
             else:
@@ -142,7 +142,7 @@ class UrlAwareWidget:
         return result, result
 
     def handle_text_input(self, url_value, label, value="", *args, **kwargs):
-        if url_value is not None:
+        if len(url_value) > 0:
             value = url_value[0]
         result = self.base_widget(label, value, *args, **kwargs)
         return result, result
@@ -156,7 +156,7 @@ class UrlAwareWidget:
         elif max_value is not None:
             input_type = type(max_value)
         assert input_type in (int, float), "unsupported number_input type"
-        if url_value is not None:
+        if len(url_value) > 0:
             value = input_type(float(url_value[0]))
         if value is None:
             result = self.base_widget(label, min_value, max_value, *args, **kwargs)
@@ -169,7 +169,7 @@ class UrlAwareWidget:
 
     def handle_date_input(self, url_value, label, value=None, *args, **kwargs):
         parse_date = lambda s: datetime.strptime(s,'%Y-%m-%d').date()
-        if url_value is not None:
+        if len(url_value) > 0:
             if len(url_value) == 1:
                 value = parse_date(url_value[0])
             else:
@@ -177,14 +177,16 @@ class UrlAwareWidget:
         result = self.base_widget(label, value, *args, **kwargs)
         if isinstance(result, tuple):
             new_url_value = [d.isoformat() for d in result]
-        else:
+        elif result is not None:
             new_url_value = result.isoformat()
+        else:
+            new_url_value = result
         return new_url_value, result
 
     def handle_time_input(self, url_value, label, value=None, *args, **kwargs):
         parse_time = lambda s: datetime.strptime(s, '%H:%M').time()
-        if url_value is not None:
-            value = parse_time(url_value)
+        if len(url_value) > 0:
+            value = parse_time(url_value[0])
         result = self.base_widget(label, value, *args, **kwargs)
         if result is not None:
             return result.strftime('%H:%M'), result
@@ -192,7 +194,7 @@ class UrlAwareWidget:
             return result, result
 
     def handle_color_picker(self, url_value, label, value=None, *args, **kwargs):
-        if url_value is not None:
+        if len(url_value) > 0:
             value = url_value[0]
         result = self.base_widget(label, value, *args, **kwargs)
         return result, result
