@@ -17,12 +17,6 @@ date_input = stp.date_input('date_input', url_key='date_input')
 time_input = stp.time_input('time_input', url_key='time_input')
 color_picker = stp.color_picker('color_picker', value='#00EEFF', url_key='color_picker')
 
-#with stp.form('form'):
-#    selectbox = stp.selectbox('selectbox', ['Option A', 'Option B', 'Option C'], url_key='selectbox')
-#    text_input = stp.text_input('text_input', value='xxx', url_key='text_input')
-#    time_input = stp.time_input('time_input', url_key='time_input')
-#    stp.form_submit_button('Submit')
-
 loc = locals().copy()
 irrelevant = [
     "__name__",
