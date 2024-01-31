@@ -102,6 +102,9 @@ class UrlAwareWidget:
         result = self.base_widget(label, value, *args, **kwargs)
         return str(result), result
 
+    def handle_toggle(self, url_value, label, value=False, *args, **kwargs):
+        return self.handle_checkbox(url_value, label, value, *args, **kwargs)
+
     def handle_radio(self, url_value, *args, **kwargs):
         return self.handle_selectbox(url_value, *args, **kwargs)
 
@@ -269,6 +272,8 @@ class UrlAwareFormSubmitButton:
 
 
 checkbox = UrlAwareWidget(st.checkbox)
+if hasattr(st, 'toggle'):
+    toggle = UrlAwareWidget(st.toggle)
 radio = UrlAwareWidget(st.radio)
 selectbox = UrlAwareWidget(st.selectbox)
 multiselect = UrlAwareWidget(st.multiselect)
@@ -292,6 +297,8 @@ except ImportError:
 
 class UrlAwareForm:
     checkbox = UrlAwareWidget(st.checkbox)
+    if hasattr(st, 'toggle'):
+        toggle = UrlAwareWidget(st.toggle)
     radio = UrlAwareWidget(st.radio)
     selectbox = UrlAwareWidget(st.selectbox)
     multiselect = UrlAwareWidget(st.multiselect)
