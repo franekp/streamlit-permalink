@@ -15,6 +15,8 @@ stp.checkbox, stp.radio, stp.selectbox, stp.multiselect, stp.slider, stp.select_
 stp.number_input, stp.text_area, stp.date_input, stp.time_input, stp.color_picker, stp.form_submit_button
 ```
 
+In addition to standard input widgets, it also has an url-aware version of the [streamlit-option-menu](https://github.com/victoryhb/streamlit-option-menu) component: `stp.option_menu`. For this to work, `streamlit-option-menu` must be installed separately.
+
 General usage of input widgets is described in [Streamlit docs](https://docs.streamlit.io/library/api-reference/widgets). Url-aware widgets additionally take one more keyword argument: `url_key`. It is the name of the query parameter in the URL under which the widget’s state will be persisted:
 
 ```python

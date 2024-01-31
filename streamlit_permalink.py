@@ -116,6 +116,17 @@ class UrlAwareWidget:
         result = self.base_widget(label, options, index, *args, **kwargs)
         return result, result
 
+    def handle_option_menu(self, url_value, menu_title, options, default_index=0, *args, **kwargs):
+        url_value = url_value and url_value[0]
+        options = list(map(str, options))
+        if url_value is not None:
+            try:
+                default_index = options.index(url_value)
+            except ValueError:
+                pass
+        result = self.base_widget(menu_title, options, default_index, *args, **kwargs)
+        return result, result
+
     def handle_multiselect(self, url_value, label, options, default=None, *args, **kwargs):
         options = list(map(str, options))
         if url_value is not None:
@@ -271,6 +282,13 @@ time_input = UrlAwareWidget(st.time_input)
 color_picker = UrlAwareWidget(st.color_picker)
 form_submit_button = UrlAwareFormSubmitButton(st.form_submit_button)
 
+try:
+    import streamlit_option_menu
+    option_menu = UrlAwareWidget(streamlit_option_menu.option_menu)
+    _has_option_menu = True
+except ImportError:
+    _has_option_menu = False
+
 
 class UrlAwareForm:
     checkbox = UrlAwareWidget(st.checkbox)
@@ -286,6 +304,9 @@ class UrlAwareForm:
     time_input = UrlAwareWidget(st.time_input)
     color_picker = UrlAwareWidget(st.color_picker)
     form_submit_button = UrlAwareFormSubmitButton(st.form_submit_button)
+
+    if _has_option_menu:
+        option_menu = UrlAwareWidget(streamlit_option_menu.option_menu)
 
     def __init__(self, key, *args, **kwargs):
         self.base_form = st.form(key, *args, **kwargs)
@@ -310,4 +331,7 @@ form = UrlAwareForm
 
 
 def __getattr__(name):
-    return getattr(st, name)
+    try:
+        return getattr(st, name)
+    except AttributeError as e:
+        raise AttributeError(str(e).replace('streamlit', 'streamlit_permalink'))
