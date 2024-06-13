@@ -7,6 +7,8 @@ import streamlit as st
 # used for widgets to know whether they
 # are inside a form or not
 _active_form = None
+# Placeholder used to denote an empty list.
+_EMPTY = "_STREAMLIT_PERMALINK_EMPTY"
 
 
 def to_url_value(result):
@@ -15,6 +17,8 @@ def to_url_value(result):
     if isinstance(result, (bool, float, int)):
         return str(result)
     if isinstance(result, (list, tuple)):
+        if len(result) == 0:
+            return [_EMPTY]
         return list(map(to_url_value, result))
     if isinstance(result, date):
         return result.isoformat()
@@ -132,7 +136,9 @@ class UrlAwareWidget:
 
     def handle_multiselect(self, url_value, label, options, default=None, *args, **kwargs):
         options = list(map(str, options))
-        if url_value is not None:
+        if url_value == [_EMPTY]:
+            default = []
+        elif url_value is not None:
             default = url_value
         result = self.base_widget(label, options, default, *args, **kwargs)
         return result, result
