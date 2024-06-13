@@ -8,7 +8,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='streamlit-permalink',
-    version='0.5.1',
+    version='0.5.2',
     description='Effortless permalinks in Streamlit apps.',
     long_description=long_description,
     long_description_content_type='text/markdown',
